@@ -13,18 +13,24 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const router = useRouter();
+  const { toast } = useToast();
 
   const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BE_URL}/auth/login`,
         {
@@ -44,13 +50,23 @@ export default function LoginPage() {
       storage.setItem("token", token);
 
       // Redirect to dashboard after login
-      router.push("/admin/dashboard") // Ganti dengan halaman tujuan setelah login
+      router.push("/admin/dashboard");
+      setIsLoading(false);
     } catch (error) {
       if (error instanceof AxiosError) {
+        toast({
+          type: "foreground",
+          duration: 5000,
+          variant: "destructive",
+          title: error.response?.data?.message || "Please try again.",
+          description: "Please check your email and password.",
+          action: <ToastAction altText="Try again">Try again</ToastAction>,
+        });
         console.log("Login error:", error);
-        alert(error.response?.data?.message || "Please try again.");
+        setIsLoading(false);
       } else {
         console.error("Unknown error:", error);
+        setIsLoading(false);
       }
     }
   };
@@ -84,7 +100,7 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Username or email</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -122,7 +138,11 @@ export default function LoginPage() {
                 className="w-full bg-[#6B46C1] hover:bg-[#5835A0]"
                 type="submit"
               >
-                Sign In
+                {isLoading ? (
+                  <LoadingSpinner />
+                ) : (
+                  <span>Sign In</span>
+                )}
               </Button>
             </form>
           </CardContent>
