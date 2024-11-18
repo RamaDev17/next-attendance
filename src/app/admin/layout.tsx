@@ -29,6 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { checkAuth } from "@/helpers/checkAuth";
+import { useApi } from "@/hooks/use-api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Admin({
   children,
@@ -36,6 +41,35 @@ export default function Admin({
   children: React.ReactNode;
 }>) {
   const [isOpen, setIsOpen] = React.useState(true);
+  const router = useRouter();
+  const {request, error} = useApi ();
+  const {toast} = useToast()
+
+  useEffect(() => {
+    const validateUser = async () => {
+      const isAuthenticated = await checkAuth();
+
+      if (!isAuthenticated) {
+        toast({
+          title: "Unauthorized",
+          description: "You are not authorized to access this page",
+          variant: "destructive",
+        })
+        router.push("/login");
+      }
+    };
+
+    validateUser();
+  }, [router]);
+
+  const logout = async () => {
+    await request("POST", `${process.env.NEXT_PUBLIC_BE_URL}/auth/logout`);
+    if (!error) {
+      router.push("/login");
+    }else{
+      console.log(error);
+    }
+  };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -88,7 +122,7 @@ export default function Admin({
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
