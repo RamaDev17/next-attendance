@@ -11,47 +11,62 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
-import axios, { AxiosError } from "axios";
+import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useApi } from "@/hooks/use-api";
+import { checkAuth } from "@/helpers/checkAuth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { request, isLoading } = useApi();
 
   const router = useRouter();
   const { toast } = useToast();
 
+  useEffect(() => {
+    const validateUser = async () => {
+      const isAuthenticated = await checkAuth();
+
+      if (isAuthenticated) {
+        router.push("/admin/dashboard");
+      }
+    };
+
+    validateUser();
+  }, [router]);
+
   const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     try {
-      setIsLoading(true);
-      const response = await axios.post(
+      await request(
+        "POST",
         `${process.env.NEXT_PUBLIC_BE_URL}/auth/login`,
         {
           email,
           password,
+          remember: rememberMe,
         },
         {
           headers: { "Content-Type": "application/json" },
         }
       );
 
-      // Assume the response has a `token` field
-      const { token } = response.data;
-
-      // Determine where to store the token based on rememberMe
-      const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("token", token);
-
+      toast({
+        type: "foreground",
+        duration: 2000,
+        variant: "default",
+        title: "Success",
+        description: "Login successful.",
+      });
       // Redirect to dashboard after login
       router.push("/admin/dashboard");
-      setIsLoading(false);
     } catch (error) {
       if (error instanceof AxiosError) {
         toast({
@@ -63,11 +78,8 @@ export default function LoginPage() {
           action: <ToastAction altText="Try again">Try again</ToastAction>,
         });
         console.log("Login error:", error);
-        setIsLoading(false);
-      } else {
-        console.error("Unknown error:", error);
-        setIsLoading(false);
       }
+      console.error("Unknown error:", error);
     }
   };
 
@@ -138,11 +150,7 @@ export default function LoginPage() {
                 className="w-full bg-[#6B46C1] hover:bg-[#5835A0]"
                 type="submit"
               >
-                {isLoading ? (
-                  <LoadingSpinner />
-                ) : (
-                  <span>Sign In</span>
-                )}
+                {isLoading ? <LoadingSpinner /> : <span>Sign In</span>}
               </Button>
             </form>
           </CardContent>
