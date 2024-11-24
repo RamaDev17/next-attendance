@@ -60,7 +60,7 @@ export default function Admin({
     };
 
     validateUser();
-  }, [router]);
+  }, [router, toast]);
 
   const logout = async () => {
     await request("POST", `${process.env.NEXT_PUBLIC_BE_URL}/auth/logout`);
@@ -132,7 +132,7 @@ export default function Admin({
       <nav
         className={cn(
           "flex flex-col bg-[#1B3A57] text-white transition-all duration-300 ease-in-out",
-          isOpen ? "w-64" : "w-16"
+          isOpen ? "w-64" : "w-16", "sticky top-0 h-screen"
         )}
       >
         <div className="flex items-center justify-between p-4">
