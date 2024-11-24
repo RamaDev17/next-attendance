@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import TanstackProvider from "@/providers/ReactQueryProvider";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,10 +31,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TanstackProvider>
-          {children}
-          <Toaster />
-        </TanstackProvider>
+        <AntdRegistry>
+          <TanstackProvider>
+            {children}
+            <Toaster />
+          </TanstackProvider>
+        </AntdRegistry>
       </body>
     </html>
   );
