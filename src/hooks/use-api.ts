@@ -1,8 +1,8 @@
 import { useState } from "react";
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-export const useApi = () => {
-  const [data, setData] = useState<unknown>(null);
+export const useApi = <T = unknown>() => {
+  const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -11,11 +11,11 @@ export const useApi = () => {
     url: string,
     body?: unknown,
     config?: AxiosRequestConfig
-  ) => {
+  ): Promise<T> => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios({
+      const response = await axios<T>({
         method,
         url,
         data: body,
@@ -26,8 +26,6 @@ export const useApi = () => {
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.log(error);
-        setIsLoading(false);
         const errorMessage =
           error.response?.data?.message ||
           "An error occurred. Please try again.";
@@ -36,7 +34,7 @@ export const useApi = () => {
       } else {
         console.error("Unknown error:", error);
         setError("Error occurred. Please try again.");
-        setIsLoading(false);
+        throw new Error("Unknown error occurred.");
       }
     } finally {
       setIsLoading(false);
