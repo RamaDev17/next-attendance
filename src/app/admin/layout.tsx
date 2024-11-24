@@ -1,25 +1,18 @@
 "use client";
 
-import * as React from "react";
+import React, { useState } from "react";
 import {
-  Home,
-  Menu,
-  ChevronLeft,
-  User,
-  Bell,
-//   Search,
-  Building2,
-} from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  UserOutlined,
+  VideoCameraOutlined,
+} from "@ant-design/icons";
+import { Button, Layout, Menu, theme } from "antd";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { checkAuth } from "@/helpers/checkAuth";
+import { useApi } from "@/hooks/use-api";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,22 +21,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { checkAuth } from "@/helpers/checkAuth";
-import { useApi } from "@/hooks/use-api";
-import { useToast } from "@/hooks/use-toast";
+import { Button as ButtonUi } from "@/components/ui/button";
+import { User } from "lucide-react";
+
+const { Header, Sider, Content } = Layout;
 
 export default function Admin({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [isOpen, setIsOpen] = React.useState(true);
+  const [collapsed, setCollapsed] = useState(false);
+  const {
+    token: { colorBgContainer, borderRadiusLG },
+  } = theme.useToken();
+
   const router = useRouter();
-  const {request, error} = useApi ();
-  const {toast} = useToast()
+  const { request, error } = useApi();
+  const { toast } = useToast();
 
   useEffect(() => {
     const validateUser = async () => {
@@ -54,7 +49,7 @@ export default function Admin({
           title: "Unauthorized",
           description: "You are not authorized to access this page",
           variant: "destructive",
-        })
+        });
         router.push("/login");
       }
     };
@@ -66,48 +61,20 @@ export default function Admin({
     await request("POST", `${process.env.NEXT_PUBLIC_BE_URL}/auth/logout`);
     if (!error) {
       router.push("/login");
-    }else{
+    } else {
       console.log(error);
     }
   };
 
-  const toggleSidebar = () => setIsOpen(!isOpen);
-
-  const NavItem = ({
-    icon: Icon,
-    label,
-  }: {
-    icon: React.ElementType;
-    label: string;
-  }) => (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            className={cn(
-              "my-1 w-full justify-start text-white hover:bg-[#3498DB] hover:text-white",
-              !isOpen && "justify-center p-2"
-            )}
-          >
-            <Icon className={cn("h-5 w-5", isOpen && "mr-2")} />
-            {isOpen && <span>{label}</span>}
-          </Button>
-        </TooltipTrigger>
-        {!isOpen && <TooltipContent side="right">{label}</TooltipContent>}
-      </Tooltip>
-    </TooltipProvider>
-  );
-
   const AccountDropdown = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
+        <ButtonUi
           variant="ghost"
-          className="relative h-8 w-8 rounded-full text-[#1B3A57] hover:bg-[#3498DB]/20"
+          className="relative h-16 w-16 rounded-full text-[#1B3A57] hover:bg-[#3498DB]/20"
         >
-          <User className="h-5 w-5" />
-        </Button>
+          <User className="h-10 w-10" />
+        </ButtonUi>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
@@ -128,59 +95,66 @@ export default function Admin({
   );
 
   return (
-    <div className="flex min-h-screen bg-white">
-      <nav
-        className={cn(
-          "flex flex-col bg-[#1B3A57] text-white transition-all duration-300 ease-in-out",
-          isOpen ? "w-64" : "w-16", "sticky top-0 h-screen"
-        )}
-      >
-        <div className="flex items-center justify-between p-4">
-          {isOpen && <h2 className="text-xl font-bold">Dashboard</h2>}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="ml-auto text-white hover:bg-[#3498DB]"
+    <div className="flex min-h-screen">
+      <Layout>
+        <Sider trigger={null} collapsible collapsed={collapsed}>
+          <div className="p-2 mx-4 my-2 h-8 flex items-center justify-center bg-[#1B3A57] rounded-full" />
+          <Menu
+            theme="dark"
+            mode="inline"
+            defaultSelectedKeys={["1"]}
+            items={[
+              {
+                key: "1",
+                icon: <UserOutlined />,
+                label: "Dashboard",
+                onClick: () => {
+                  router.push("/admin/dashboard");
+                },
+              },
+              {
+                key: "2",
+                icon: <VideoCameraOutlined />,
+                label: "Office",
+                onClick: () => {
+                  router.push("/admin/office");
+                },
+              },
+            ]}
+          />
+        </Sider>
+        <Layout>
+          <Header
+            className="flex items-center justify-between px-4"
+            style={{ background: colorBgContainer, padding: 0 }}
           >
-            {isOpen ? <ChevronLeft /> : <Menu />}
-          </Button>
-        </div>
-        <div className="flex-1 space-y-4 p-2">
-          <Link href="/admin/dashboard">
-            <NavItem icon={Home} label="Dashboard" />
-          </Link>
-          <Link href="/admin/office">
-            <NavItem icon={Building2} label="Office" />
-          </Link>
-        </div>
-      </nav>
-      <div className="flex flex-1 flex-col">
-        <header className="flex flex-col md:flex-row items-center justify-between border-b border-[#3498DB] p-4 bg-white text-[#1B3A57] space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            {/* <div className="relative hidden md:block">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#3498DB]" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="pl-8 w-[200px] lg:w-[300px] border-[#3498DB] focus:ring-[#3498DB] focus:border-[#3498DB]"
-              />
-            </div> */}
-          </div>
-          <div className="flex items-center space-x-4">
             <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#1B3A57] hover:bg-[#3498DB]/20"
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
-            <AccountDropdown />
-          </div>
-        </header>
-        <main className="flex-1 p-4 md:p-6 bg-white">{children}</main>
-      </div>
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                fontSize: "16px",
+                width: 64,
+                height: 64,
+              }}
+            />
+            <div className="p-4">
+              <AccountDropdown />
+            </div>
+          </Header>
+          <Content
+            style={{
+              margin: "24px 16px",
+              padding: 24,
+              minHeight: 280,
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+            }}
+          >
+            {children}
+          </Content>
+        </Layout>
+      </Layout>
     </div>
   );
 }
