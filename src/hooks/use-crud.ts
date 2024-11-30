@@ -31,7 +31,7 @@ export const useCrud = (resource: string) => {
   // PUT: Update data
   const useUpdate = () =>
     useMutation({
-      mutationFn: ({ id, payload }: { id: string | number; payload: any }) =>
+      mutationFn: ({ id, payload }: { id: string; payload: any }) =>
         updateData(`/${resource}/${id}`, payload),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: [resource] }); // Refresh cache setelah update
