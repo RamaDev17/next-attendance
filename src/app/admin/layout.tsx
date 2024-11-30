@@ -47,6 +47,7 @@ export default function Admin({
   const menuKeyMap: Record<string, string> = {
     "/admin/dashboard": "1",
     "/admin/office": "2",
+    "/admin/shifts": "3",
   };
 
   useEffect(() => {
@@ -130,6 +131,15 @@ export default function Admin({
                 onClick: () => {
                   setKey("2")
                   router.push("/admin/office");
+                },
+              },
+              {
+                key: "3",
+                icon: <VideoCameraOutlined />,
+                label: "Shift",
+                onClick: () => {
+                  setKey("3")
+                  router.push("/admin/shifts");
                 },
               },
             ]}
