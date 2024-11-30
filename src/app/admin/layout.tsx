@@ -9,7 +9,7 @@ import {
 } from "@ant-design/icons";
 import { Button, Layout, Menu, theme } from "antd";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { checkAuth } from "@/helpers/checkAuth";
 import { useApi } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +24,7 @@ import {
 import { Button as ButtonUi } from "@/components/ui/button";
 import { User } from "lucide-react";
 
+
 const { Header, Sider, Content } = Layout;
 
 export default function Admin({
@@ -37,10 +38,19 @@ export default function Admin({
   } = theme.useToken();
 
   const router = useRouter();
+  const pathname = usePathname(); 
   const { request, error } = useApi();
   const { toast } = useToast();
 
+  const [key, setKey] = useState("1")
+
+  const menuKeyMap: Record<string, string> = {
+    "/admin/dashboard": "1",
+    "/admin/office": "2",
+  };
+
   useEffect(() => {
+    setKey(menuKeyMap[pathname])
     const validateUser = async () => {
       const isAuthenticated = await checkAuth();
 
@@ -102,13 +112,14 @@ export default function Admin({
           <Menu
             theme="dark"
             mode="inline"
-            defaultSelectedKeys={["1"]}
+            selectedKeys={[key]}
             items={[
               {
                 key: "1",
                 icon: <UserOutlined />,
                 label: "Dashboard",
                 onClick: () => {
+                  setKey("1")
                   router.push("/admin/dashboard");
                 },
               },
@@ -117,6 +128,7 @@ export default function Admin({
                 icon: <VideoCameraOutlined />,
                 label: "Office",
                 onClick: () => {
+                  setKey("2")
                   router.push("/admin/office");
                 },
               },
